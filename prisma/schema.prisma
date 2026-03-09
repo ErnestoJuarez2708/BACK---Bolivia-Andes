@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Usuarios {
+  id            Int          @id @default(autoincrement())
+  email         String       @unique
+  password_hash String
+  nombre        String?
+  created_at    DateTime     @default(now())
+  compras       Compras[]
+  comentarios   Comentarios[]
+}
+
+model Leyendas {
+  id                Int          @id @default(autoincrement())
+  titulo            String
+  descripcion       String
+  autor_referencia  String?
+  imagen_url        String?
+  created_at        DateTime     @default(now())
+  microjuegos       Microjuegos?
+  comentarios       Comentarios[]
+}
+
+model Microjuegos {
+  id              Int      @id @default(autoincrement())
+  leyenda_id      Int      @unique
+  nombre          String
+  descripcion     String?
+  demo_apk_path   String?
+  full_apk_path   String?
+  precio          Float    @default(2.0)
+  descargas_demo  Int      @default(0)
+  created_at      DateTime @default(now())
+  leyenda         Leyendas @relation(fields: [leyenda_id], references: [id], onDelete: Cascade)
+  compras         Compras[]
+}
+
+model Compras {
+  id                  Int      @id @default(autoincrement())
+  usuario_id          Int?
+  microjuego_id       Int
+  monto               Float
+  stripe_payment_id   String?
+  estado              String   @default("pendiente")
+  download_token      String?
+  expires_at          DateTime?
+  created_at          DateTime @default(now())
+  usuario             Usuarios? @relation(fields: [usuario_id], references: [id], onDelete: SetNull)
+  microjuego          Microjuegos @relation(fields: [microjuego_id], references: [id], onDelete: Cascade)
+}
+
+model Comentarios {
+  id         Int      @id @default(autoincrement())
+  usuario_id Int?
+  leyenda_id Int
+  texto      String
+  rating     Int
+  created_at DateTime @default(now())
+  usuario    Usuarios? @relation(fields: [usuario_id], references: [id], onDelete: SetNull)
+  leyenda    Leyendas @relation(fields: [leyenda_id], references: [id], onDelete: Cascade)
+}
