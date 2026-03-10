@@ -1,11 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 router.get('/', async (req, res) => {
-  const leyendas = await prisma.leyendas.findMany();
-  res.json(leyendas);
+  try {
+    const leyendas = await prisma.leyendas.findMany();
+    res.json(leyendas);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener leyendas' });
+  }
 });
 
 module.exports = router;
