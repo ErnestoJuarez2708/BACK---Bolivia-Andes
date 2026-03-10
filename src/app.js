@@ -26,5 +26,3 @@ app.listen(PORT, () => {
 console.log("STRIPE_SECRET_KEY:", process.env.STRIPE_SECRET_KEY ? `existe (${process.env.STRIPE_SECRET_KEY.length} caracteres)` : "NO EXISTE");
 console.log("DATABASE_URL:     ", process.env.DATABASE_URL ? `existe (${process.env.DATABASE_URL.length} caracteres)` : "NO EXISTE");
 console.log("JWT_SECRET:       ", process.env.JWT_SECRET ? "existe" : "NO EXISTE (necesario para login)");
-
-console.log("Prisma conectado OK");
