@@ -3,7 +3,6 @@ const router = express.Router();
 const prisma = require('../lib/prisma');
 const authMiddleware = require('../middleware/jwt-auth');
 
-console.log('✅ Router comentarios cargado correctamente');
 
 router.get('/:leyenda_id', async (req, res) => {
   console.log(`→ Solicitud GET /api/comentarios/${req.params.leyenda_id}`);
@@ -38,7 +37,6 @@ router.get('/:leyenda_id', async (req, res) => {
       orderBy: { created_at: 'desc' }
     });
 
-    console.log(`→ Comentarios encontrados: ${comentarios.length} para leyenda ${id}`);
     
     res.json({
       leyenda: leyendaExiste,
