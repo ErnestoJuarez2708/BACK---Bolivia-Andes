@@ -1,42 +1,29 @@
 const express = require('express');
 const router = express.Router();
 const prisma = require('../lib/prisma');
-const authMiddleware = require('../middleware/jwt-auth');
 
-router.get('/', async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
-    const leyendas = await prisma.leyendas.findMany();
-    res.json(leyendas);
+    const id = parseInt(req.params.id);
+    const leyenda = await prisma.leyendas.findUnique({
+      where: { id: id }
+    });
+    res.json(leyenda);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener leyendas' });
+    console.error('Error en /leyendas/:id:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
-router.post('/', authMiddleware, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const { titulo, descripcion, autor_referencia, imagen_url } = req.body;
-
-    if (!titulo || !descripcion) {
-      return res.status(400).json({ error: 'Título y descripción son obligatorios' });
-    }
-
-    const nuevaLeyenda = await prisma.leyendas.create({
-      data: {
-        titulo,
-        descripcion,
-        autor_referencia: autor_referencia || null,
-        imagen_url: imagen_url || null,
-      },
+    const leyendas = await prisma.leyendas.findMany({
+      orderBy: { created_at: 'desc' }
     });
-
-    res.status(201).json({
-      message: 'Leyenda creada exitosamente',
-      leyenda: nuevaLeyenda
-    });
-  } catch (error) {
-    console.error('Error al crear leyenda:', error);
-    res.status(500).json({ error: 'Error interno al crear la leyenda' });
+    res.json(leyendas);
+  } catch (err) {
+    console.error('Error al obtener todas las leyendas:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
