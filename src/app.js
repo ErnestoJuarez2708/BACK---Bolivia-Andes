@@ -27,10 +27,10 @@ app.use(cors({
 app.use(express.json());
 
 
-app.use('/api/auth',       require('./routes/auth'));
-app.use('/api/leyendas',   require('./routes/leyendas'));
-app.use('/api/comentarios', require('./routes/comentarios'));
-app.use('/api/pagos',      require('./routes/pagos'));
+app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/leyendas', require('./routes/leyendas.routes'));
+app.use('/api/comentarios', require('./routes/comentarios.routes'));
+app.use('/api/pagos', require('./routes/pagos.routes'));
 
 
 const PORT = process.env.PORT || 3000;
