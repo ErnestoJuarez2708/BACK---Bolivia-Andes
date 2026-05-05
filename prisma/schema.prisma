@@ -36,6 +36,8 @@ model Minijuegos {
   leyenda_id      Int      @unique
   nombre          String
   descripcion     String?
+  precio          Decimal? @db.Decimal(10, 2)
+  activo            Boolean   @default(true)
   demo_apk_path   String?
   full_apk_path   String?
   descargas_demo  Int      @default(0)

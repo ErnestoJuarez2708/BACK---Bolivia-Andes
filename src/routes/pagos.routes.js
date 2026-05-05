@@ -14,5 +14,6 @@ router.post(
 
 router.get('/descargar-full', pagosController.descargarFull);
 router.get('/descargar-demo/:id', pagosController.descargarDemo);
+router.post('/test-completar-compra', authMiddleware, pagosController.testCompletarCompra);
 
 module.exports = router;

@@ -16,7 +16,7 @@ class PagosService {
     });
 
     if (!minijuego) throw new Error('Minijuego no encontrado');
-    if (!minijuego.activo) throw new Error('Este minijuego no está disponible');
+    if (!minijuego.activo) throw new Error('Este minijuego no está diisponible');
 
     const amount = Math.round(Number(minijuego.precio) * 100);
 
@@ -29,27 +29,41 @@ class PagosService {
     return { clientSecret: paymentIntent.client_secret };
   }
 
-  async handleWebhook(event) {
-    if (event.type === 'payment_intent.succeeded') {
-      const paymentIntent = event.data.object;
-      const { userId, microjuegoId } = paymentIntent.metadata;
+    async handleWebhook(event) {
+    if (event.type !== 'payment_intent.succeeded') return;
 
-      const userIdNum = Number(userId);
-      const microIdNum = Number(microjuegoId);
+    const paymentIntent = event.data.object;
+    const { userId, microjuegoId } = paymentIntent.metadata;
 
-      const token = uuidv4();
-      const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    if (!userId || !microjuegoId) {
+      console.error('Faltan datos en metadata');
+      return;
+    }
 
-      await prisma.Compras.upsert({
-        where: {
-          stripe_payment_id: paymentIntent.id,
-        },
-        update: {
+    const userIdNum = Number(userId);
+    const microIdNum = Number(microjuegoId);
+    const token = uuidv4();
+    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    // Buscamos si ya existe una compra con ese stripe_payment_id
+    let compra = await prisma.Compras.findFirst({
+      where: { stripe_payment_id: paymentIntent.id }
+    });
+
+    if (compra) {
+      // Actualizamos la compra existente
+      await prisma.Compras.update({
+        where: { id: compra.id },
+        data: {
           estado: 'completado',
           download_token: token,
           expires_at: expires,
-        },
-        create: {
+        }
+      });
+    } else {
+      // Creamos una nueva compra
+      await prisma.Compras.create({
+        data: {
           usuario_id: userIdNum,
           minijuego_id: microIdNum,
           monto: paymentIntent.amount / 100,
@@ -57,9 +71,11 @@ class PagosService {
           estado: 'completado',
           download_token: token,
           expires_at: expires,
-        },
+        }
       });
     }
+
+    console.log(`✅ Compra completada para microjuego ${microIdNum} (token: ${token})`);
   }
 
   async descargarFull(token) {
