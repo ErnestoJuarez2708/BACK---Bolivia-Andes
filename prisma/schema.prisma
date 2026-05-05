@@ -24,20 +24,20 @@ model Leyendas {
   descripcion       String
   autor_referencia  String?
   imagen_url        String?
+  youtube_video_id  String?
   created_at        DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
-  microjuegos       Microjuegos?
+  microjuegos       Minijuegos?
   comentarios       Comentarios[]
 }
 
-model Microjuegos {
+model Minijuegos {
   id              Int      @id @default(autoincrement())
   leyenda_id      Int      @unique
   nombre          String
   descripcion     String?
   demo_apk_path   String?
   full_apk_path   String?
-  precio          Float    @default(2.0)
   descargas_demo  Int      @default(0)
   created_at      DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -48,7 +48,7 @@ model Microjuegos {
 model Compras {
   id                  Int      @id @default(autoincrement())
   usuario_id          Int?
-  microjuego_id       Int
+  minijuego_id       Int
   monto               Float
   stripe_payment_id   String?
   estado              String   @default("pendiente")
@@ -57,7 +57,7 @@ model Compras {
   created_at          DateTime @default(now())
   updatedAt           DateTime @updatedAt
   usuario             Usuarios? @relation(fields: [usuario_id], references: [id], onDelete: SetNull)
-  microjuego          Microjuegos @relation(fields: [microjuego_id], references: [id], onDelete: Cascade)
+  minijuego          Minijuegos @relation(fields: [minijuego_id], references: [id], onDelete: Cascade)
 }
 
 model Comentarios {
