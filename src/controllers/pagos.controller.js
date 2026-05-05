@@ -1,6 +1,7 @@
 const pagosService = require('../services/pagos.service');
-const fs = require('fs');                    // ← FALTABA ESTO
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);  // ← FALTABA ESTO
+const fs = require('fs');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const prisma = require('../lib/prisma');
 
 class PagosController {
 
@@ -62,6 +63,8 @@ class PagosController {
         return res.status(400).json({ error: 'microjuego_id es requerido' });
       }
 
+      console.log(`[testCompletarCompra] userId: ${req.userId}, microjuego_id: ${microjuego_id}`);
+
       const fakeEvent = {
         type: 'payment_intent.succeeded',
         data: {
@@ -71,14 +74,16 @@ class PagosController {
               userId: req.userId.toString(),
               microjuegoId: microjuego_id.toString()
             },
-            amount: 299
+            amount: 200
           }
         }
       };
 
+      console.log(`[testCompletarCompra] Llamando handleWebhook con evento:`, fakeEvent);
       await pagosService.handleWebhook(fakeEvent);
+      console.log(`[testCompletarCompra] handleWebhook completado`);
 
-      const compra = await require('../lib/prisma').Compras.findFirst({
+      const compra = await prisma.compras.findFirst({
         where: {
           minijuego_id: Number(microjuego_id),
           usuario_id: req.userId,
@@ -87,6 +92,12 @@ class PagosController {
         orderBy: { created_at: 'desc' }
       });
 
+      if (!compra) {
+        throw new Error('No se encontró la compra creada en la BD');
+      }
+
+      console.log(`[testCompletarCompra] Compra encontrada:`, compra);
+
       res.json({
         message: '✅ Compra simulada correctamente (webhook)',
         download_token: compra.download_token,
@@ -94,7 +105,7 @@ class PagosController {
         microjuego_id: compra.minijuego_id
       });
     } catch (err) {
-      console.error(err);
+      console.error('[testCompletarCompra] Error:', err);
       res.status(500).json({ error: err.message });
     }
   }

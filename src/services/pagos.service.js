@@ -11,7 +11,7 @@ class PagosService {
   async crearPaymentIntent(microjuego_id, userId) {
     if (!microjuego_id) throw new Error('microjuego_id es requerido');
 
-    const minijuego = await prisma.Minijuegos.findUnique({
+    const minijuego = await prisma.minijuegos.findUnique({
       where: { id: Number(microjuego_id) }
     });
 
@@ -29,7 +29,7 @@ class PagosService {
     return { clientSecret: paymentIntent.client_secret };
   }
 
-    async handleWebhook(event) {
+  async handleWebhook(event) {
     if (event.type !== 'payment_intent.succeeded') return;
 
     const paymentIntent = event.data.object;
@@ -45,14 +45,14 @@ class PagosService {
     const token = uuidv4();
     const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    // Buscamos si ya existe una compra con ese stripe_payment_id
-    let compra = await prisma.Compras.findFirst({
+    console.log(`[handleWebhook] Creando compra - userId: ${userIdNum}, microjuegoId: ${microIdNum}`);
+
+    let compra = await prisma.compras.findFirst({
       where: { stripe_payment_id: paymentIntent.id }
     });
 
     if (compra) {
-      // Actualizamos la compra existente
-      await prisma.Compras.update({
+      await prisma.compras.update({
         where: { id: compra.id },
         data: {
           estado: 'completado',
@@ -61,8 +61,8 @@ class PagosService {
         }
       });
     } else {
-      // Creamos una nueva compra
-      await prisma.Compras.create({
+      console.log(`[handleWebhook] Creando nueva compra en BD...`);
+      await prisma.compras.create({
         data: {
           usuario_id: userIdNum,
           minijuego_id: microIdNum,
@@ -74,14 +74,12 @@ class PagosService {
         }
       });
     }
-
-    console.log(`✅ Compra completada para microjuego ${microIdNum} (token: ${token})`);
   }
 
   async descargarFull(token) {
     if (!token) throw new Error('Token requerido');
 
-    const compra = await prisma.Compras.findFirst({
+    const compra = await prisma.compras.findFirst({
       where: { download_token: token },
       include: { minijuego: true }
     });
@@ -101,7 +99,7 @@ class PagosService {
   }
 
   async descargarDemo(id) {
-    const minijuego = await prisma.Minijuegos.findUnique({
+    const minijuego = await prisma.minijuegos.findUnique({
       where: { id: parseInt(id) }
     });
 
@@ -109,8 +107,7 @@ class PagosService {
       throw new Error('Demo no disponible para este minijuego');
     }
 
-    // Incrementar contador de descargas
-    await prisma.Minijuegos.update({
+    await prisma.minijuegos.update({
       where: { id: parseInt(id) },
       data: { descargas_demo: { increment: 1 } }
     });
